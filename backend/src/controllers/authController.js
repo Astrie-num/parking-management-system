@@ -13,6 +13,12 @@ const register = [
     const { name, email, password } = req.body;
 
     try {
+
+      const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ message: 'A user with this email already exists' });
+      }
+
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await User.create(name, email, hashedPassword, 'user', false);
 
@@ -30,18 +36,15 @@ const register = [
         return res.status(500).json({ message: 'Failed to send OTP' });
       }
 
-      await Otp.create(user.id, otpCode, expiresAt);
+      await Otp.create(email, otpCode, expiresAt);
 
       if (await User.hasAdmin()) {
         return res.status(403).json({ message: 'Admin already exists, only user role allowed' });
       }
 
-      res.status(201).json({ message: 'User registered, OTP sent to email', userId: user.id });
+      res.status(201).json({ message: 'OTP sent to email, please verify to complete registration', email });
     } catch (error) {
       console.error('Register error:', error);
-      if (error.message === 'A user with this email already exists') {
-        return res.status(400).json({ message: error.message });
-      }
       res.status(500).json({ error: 'Server error', details: error.message });
     }
   }
@@ -51,31 +54,31 @@ const register = [
 
 
 const verifyOtp = async (req, res) => {
-  const { userId, otpCode } = req.body;
+  const { email, otpCode } = req.body;
 
-  if (!userId || !otpCode) {
-    return res.status(400).json({ error: 'User ID and OTP code are required' });
+  if (!email || !otpCode) {
+    return res.status(400).json({ error: 'Email and OTP code are required' });
   }
 
   try {
     const otpResult = await pool.query(
-      'SELECT * FROM otps WHERE user_id = $1 AND otp_code = $2 AND expires_at > NOW() AND is_verified = FALSE',
-      [userId, otpCode]
+      'SELECT * FROM otps WHERE email = $1 AND otp_code = $2 AND expires_at > NOW() AND is_verified = FALSE',
+      [email, otpCode]
     );
 
     if (otpResult.rowCount === 0) {
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
-    await pool.query('UPDATE otps SET is_verified = TRUE WHERE user_id = $1 AND otp_code = $2', [
-      userId,
+    await pool.query('UPDATE otps SET is_verified = TRUE WHERE email = $1 AND otp_code = $2', [
+      email,
       otpCode,
     ]);
 
-    await pool.query('UPDATE users SET is_verified = TRUE WHERE id = $1', [userId]);
+    await pool.query('UPDATE users SET is_verified = TRUE WHERE email = $1', [email]);
 
-    await pool.query('INSERT INTO logs (user_id, action) VALUES ($1, $2)', [
-      userId,
+    await pool.query('INSERT INTO logs (email, action) VALUES ($1, $2)', [
+      email,
       'User verified OTP',
     ]);
 
@@ -86,16 +89,18 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-const resendOtp = async (req, res) => {
-  const { userId } = req.body;
 
-  if (!userId) {
-    return res.status(400).json({ error: 'User ID is required' });
+
+const resendOtp = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
   }
 
   try {
-    const userResult = await pool.query('SELECT * FROM users WHERE id = $1 AND is_verified = FALSE', [
-      userId,
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1 AND is_verified = FALSE', [
+      email,
     ]);
 
     if (userResult.rowCount === 0) {
@@ -106,11 +111,11 @@ const resendOtp = async (req, res) => {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    await pool.query('DELETE FROM otps WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM otps WHERE user_id = $1', [email]);
 
     await pool.query(
       'INSERT INTO otps (user_id, otp_code, expires_at) VALUES ($1, $2, $3)',
-      [userId, otpCode, expiresAt]
+      [email, otpCode, expiresAt]
     );
 
     try {
@@ -122,7 +127,7 @@ const resendOtp = async (req, res) => {
     }
 
     await pool.query('INSERT INTO logs (user_id, action) VALUES ($1, $2)', [
-      userId,
+      email,
       'OTP resent',
     ]);
 
@@ -165,8 +170,8 @@ const login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    await pool.query('INSERT INTO logs (user_id, action) VALUES ($1, $2)', [
-      user.id,
+    await pool.query('INSERT INTO logs (email, action) VALUES ($1, $2)', [
+      email,
       'User logged in',
     ]);
 

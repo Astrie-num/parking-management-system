@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from 'use-debounce';
 import { getSlotRequests, approveRequest, rejectRequest } from '../utils/api';
-import Pagination from '../components/Pagination';
+import Pagination from '../pages/Pagination';
 
 const SlotRequests = () => {
   const [requests, setRequests] = useState([]);

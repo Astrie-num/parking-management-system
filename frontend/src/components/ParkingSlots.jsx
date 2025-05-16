@@ -6,7 +6,7 @@ import {
   updateParkingSlot,
   deleteParkingSlot,
 } from '../utils/api';
-import Pagination from '../components/Pagination';
+import Pagination from '../pages/Pagination';
 
 const ParkingSlots = () => {
   const [slots, setSlots] = useState([]);

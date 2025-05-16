@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from 'use-debounce';
 import { getUsers, deleteUser } from '../utils/api';
-import Pagination from '../components/Pagination';
+import Pagination from '../pages/Pagination';
 
 const Users = () => {
   const [users, setUsers] = useState([]);

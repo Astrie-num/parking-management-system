@@ -1,10 +1,10 @@
 const { pool } = require('../config/db');
 
 class Logs {
-  static async create(user_id, action) {
+  static async create(email, action) {
     try {
-      const query = 'INSERT INTO logs (user_id, action) VALUES ($1, $2) RETURNING *';
-      const values = [user_id, action];
+      const query = 'INSERT INTO logs (email, action) VALUES ($1, $2) RETURNING *';
+      const values = [email, action];
       const result = await pool.query(query, values);
       return result.rows[0];
     } catch (error) {
@@ -19,13 +19,13 @@ class Logs {
       const searchQuery = `%${search}%`;
       const query = `
         SELECT * FROM logs 
-        WHERE action ILIKE $1 OR user_id::text ILIKE $1 
+        WHERE action ILIKE $1 OR email::text ILIKE $1 
         ORDER BY created_at DESC 
         LIMIT $2 OFFSET $3
       `;
       const countQuery = `
         SELECT COUNT(*) FROM logs 
-        WHERE action ILIKE $1 OR user_id::text ILIKE $1
+        WHERE action ILIKE $1 OR email::text ILIKE $1
       `;
       const values = [searchQuery, limit, offset];
 
@@ -56,14 +56,14 @@ class Logs {
     }
   }
 
-  static async findByUserId(id) {
+  static async findByUserEmail(id) {
     try {
-      const query = 'SELECT * FROM logs WHERE user_id = $1';
+      const query = 'SELECT * FROM logs WHERE email = $1';
       const result = await pool.query(query, [id]);
       return result.rows; // Return all logs for the user (not just the first one)
     } catch (error) {
-      console.error('Error in Logs.findByUserId:', error.message);
-      throw new Error('Failed to find logs by user ID');
+      console.error('Error in Logs.findByUserEmail:', error.message);
+      throw new Error('Failed to find logs by user email');
     }
   }
 

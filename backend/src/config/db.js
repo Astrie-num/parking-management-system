@@ -71,7 +71,6 @@ const initializeTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS logs (
       id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id),
       action VARCHAR(100),
       timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`
       
@@ -80,16 +79,12 @@ const initializeTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS otps (
       id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id),
+      email VARCHAR(100) REFERENCES users(email),
       otp_code VARCHAR(100),
       expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`
       
     );
-    
-    await pool.query(`
-     ALTER TABLE logs
-     ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    `);
+
 
     console.log('Tables created successfully or already axist!');
   } catch (error) {
