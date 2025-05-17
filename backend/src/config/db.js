@@ -29,44 +29,74 @@ const initializeTables = async () => {
 
 
     // Create vehicles table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS vehicles (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        plate_number VARCHAR(20) UNIQUE NOT NULL,
-        vehicle_type VARCHAR(50) NOT NULL,
-        size VARCHAR(20) NOT NULL,
-        other_attributes JSONB
-      )
-    `);
+    // await pool.query(`
+    //   CREATE TABLE IF NOT EXISTS vehicles (
+    //     id SERIAL PRIMARY KEY,
+    //     user_id INTEGER REFERENCES users(id),
+    //     plate_number VARCHAR(20) UNIQUE NOT NULL,
+    //     vehicle_type VARCHAR(50) NOT NULL,
+    //     size VARCHAR(20) NOT NULL,
+    //     other_attributes JSONB
+    //   )
+    // `);
 
     // Create slots table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS slots (
-         id SERIAL PRIMARY KEY,
-        slot_number VARCHAR(10) UNIQUE,
-        size VARCHAR(20),
-        vehicle_type VARCHAR(50),
-        status VARCHAR(20) DEFAULT 'available',
-        location VARCHAR(100)
-      )
-    `);
+    // await pool.query(`
+    //   CREATE TABLE IF NOT EXISTS slots (
+    //      id SERIAL PRIMARY KEY,
+    //     slot_number VARCHAR(10) UNIQUE,
+    //     size VARCHAR(20),
+    //     vehicle_type VARCHAR(50),
+    //     status VARCHAR(20) DEFAULT 'available',
+    //     location VARCHAR(100)
+    //   )
+    // `);
 
     // Create slot_requests table
+    // await pool.query(`
+    //   CREATE TABLE IF NOT EXISTS slot_requests (
+    //     id SERIAL PRIMARY KEY,
+    //     user_id INTEGER REFERENCES users(id),
+    //     vehicle_id INTEGER REFERENCES vehicles(id),
+    //     slot_id INTEGER REFERENCES slots(id),
+    //     request_status VARCHAR(20) DEFAULT 'pending',
+    //     requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    //     approved_at TIMESTAMP,
+    //     slot_number VARCHAR(10)
+    //   )
+    // `);
+
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS slot_requests (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        vehicle_id INTEGER REFERENCES vehicles(id),
-        slot_id INTEGER REFERENCES slots(id),
-        request_status VARCHAR(20) DEFAULT 'pending',
-        requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        approved_at TIMESTAMP,
-        slot_number VARCHAR(10)
-      )
+      CREATE TABLE IF NOT EXISTS slots (
+      id SERIAL PRIMARY KEY,
+      slot_number VARCHAR(10) NOT NULL,
+      vehicle_type VARCHAR(20) NOT NULL,
+      status VARCHAR(20) DEFAULT 'available',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT valid_vehicle_type CHECK (vehicle_type IN ('car', 'bike', 'truck')),
+      CONSTRAINT valid_status CHECK (status IN ('available', 'occupied', 'reserved')),
+      CONSTRAINT unique_slot_per_floor UNIQUE (slot_number));
     `);
 
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS bookings (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      slot_id INTEGER REFERENCES slots(id),
+      vehicle_registration VARCHAR(20) NOT NULL,
+      vehicle_type VARCHAR(20) NOT NULL,
+      start_time TIMESTAMP NOT NULL,
+      end_time TIMESTAMP NOT NULL,
+      status VARCHAR(20) DEFAULT 'active',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT valid_vehicle_type CHECK (vehicle_type IN ('car', 'bike', 'truck')),
+      CONSTRAINT valid_status CHECK (status IN ('active', 'completed', 'cancelled')),
+      CONSTRAINT valid_time CHECK (end_time > start_time));
+  `);
+    
     // create logs table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS logs (

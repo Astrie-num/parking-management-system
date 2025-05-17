@@ -19,8 +19,11 @@ const register = [
         return res.status(400).json({ message: 'A user with this email already exists' });
       }
 
+      const hasExistingAdmin = await User.hasAdmin();
+      const role = hasExistingAdmin ? 'user' : 'admin';
+
       const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await User.create(name, email, hashedPassword, 'user', false);
+      const user = await User.create(name, email, hashedPassword, role, false);
 
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
@@ -30,21 +33,20 @@ const register = [
         sent = await sendOtpEmail(email, otpCode);
       } catch (emailError) {
         console.error('Email sending error:', emailError);
+        await User.destroy({where : {email} });
         return res.status(500).json({ error: 'Failed to send OTP email' });
       }
       if (!sent) {
+        await User.destroy({ where: {email} });
         return res.status(500).json({ message: 'Failed to send OTP' });
       }
 
       await Otp.create(email, otpCode, expiresAt);
 
-      if (await User.hasAdmin()) {
-        return res.status(403).json({ message: 'Admin already exists, only user role allowed' });
-      }
-
       res.status(201).json({ message: 'OTP sent to email, please verify to complete registration', email });
     } catch (error) {
       console.error('Register error:', error);
+      await User.destroy({ where: {email} }).catch(console.error);
       res.status(500).json({ error: 'Server error', details: error.message });
     }
   }
