@@ -113,6 +113,7 @@
 
 import React from "react";
 import AdminSlots from "./AdminSlots";
+import Slots from "./Slots";
 
 
 
@@ -121,6 +122,7 @@ function Dashboard(){
         <div className="container mx-auto p-4">
             <h1 className="text-3xl mb-4">Dashboard</h1>
             <AdminSlots />
+            <Slots />
         </div>
 
     );

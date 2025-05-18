@@ -21,9 +21,12 @@ function Navbar() {
             <li><Link to="/slots" className="hover:underline">Book Slot</Link></li>
             {admin && (
               <>
-                <li><Link to="/admin/slots" className="hover:underline">Manage Slots</Link></li>
-                <li><Link to="/dashboard/users" className="hover:underline">Users</Link></li>
-                <li><Link to="/dashboard/logs" className="hover:underline">Logs</Link></li>
+                <li><Link to="/admin-slots" className="hover:underline">Manage Slots</Link></li>
+                <li><Link to="/bookings" className="hover:underline">Bookings</Link></li>
+
+
+                {/* <li><Link to="/dashboard/users" className="hover:underline">Users</Link></li> */}
+                {/* <li><Link to="/dashboard/logs" className="hover:underline">Logs</Link></li> */}
               </>
             )}
             <li className="ml-auto">

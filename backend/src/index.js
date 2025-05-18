@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes');
 const logRoutes = require('./routes/logRoutes');
 const parkingRoutes = require('./routes/parkingRoutes');
+const slotsRoutes = require('./routes/slotsRoute');
 
 
 const app = express();
@@ -19,7 +20,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/parking', parkingRoutes)
 app.use('/api/users', userRoutes);
 app.use('/api/logs', logRoutes);
-app.use('/api/parking', parkingRoutes);
+app.use('/api/parking/slots', parkingRoutes);
+app.use('/api/parking/bookings', parkingRoutes);
 
 
 const PORT = process.env.PORT || 5000;

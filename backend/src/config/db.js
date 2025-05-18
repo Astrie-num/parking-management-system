@@ -27,6 +27,15 @@ const initializeTables = async () => {
       )
     `);
 
+    await pool.query(`
+      CREATE TABLE  IF NOT EXISTS logs (
+       id SERIAL PRIMARY KEY,
+       user_id INTEGER REFERENCES users(id),
+       action VARCHAR(100),
+       timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+     );
+      `);
+
 
     // Create vehicles table
     // await pool.query(`
@@ -96,15 +105,20 @@ const initializeTables = async () => {
       CONSTRAINT valid_status CHECK (status IN ('active', 'completed', 'cancelled')),
       CONSTRAINT valid_time CHECK (end_time > start_time));
   `);
+
+  await pool.query(`
+    ALTER TABLE bookings
+    DROP CONSTRAINT valid_status,
+    ADD CONSTRAINT valid_status CHECK (status IN ('active', 'completed', 'cancelled', 'pending'))
+  `);
+  
     
-    // create logs table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS logs (
-      id SERIAL PRIMARY KEY,
-      action VARCHAR(100),
-      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`
-      
-    );
+await pool.query(`
+  ALTER TABLE bookings
+  ALTER COLUMN status SET DEFAULT 'pending'
+`);
+
+    
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS otps (

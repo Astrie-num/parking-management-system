@@ -8,6 +8,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Home from './pages/Home';
 import {isAuthenticated} from './utils/auth';
+import AdminBookings from './pages/AdminBookings';
+import AdminSlots from './pages/AdminSlots';
 
 
 const AuthenticatedRoute = ({ children }) => {
@@ -45,8 +47,22 @@ function App() {
             <Route path="/dashboard" element={
               <PrivateRoute>
                 <Dashboard />
+                <AdminBookings />
               </PrivateRoute>
               } />
+
+            <Route path="/bookings" element={
+              <PrivateRoute>
+                <AdminBookings />
+              </PrivateRoute>
+            } />
+
+           <Route path="/admin-slots" element={
+              <PrivateRoute>
+                <AdminSlots />
+              </PrivateRoute>
+            } />
+
 
 
             <Route path="*" element={<Navigate to="/" />} />
